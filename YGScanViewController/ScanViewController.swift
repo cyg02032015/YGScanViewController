@@ -12,14 +12,14 @@ import AVFoundation
 
 class ScanViewController: UIViewController {
 
-    let screenWidth = UIScreen.mainScreen().bounds.size.width
-    let screenHeight = UIScreen.mainScreen().bounds.size.height
-    let screenSize = UIScreen.mainScreen().bounds.size
+    let screenWidth = UIScreen.main.bounds.size.width
+    let screenHeight = UIScreen.main.bounds.size.height
+    let screenSize = UIScreen.main.bounds.size
     
     
     var traceNumber = 0
     var upORdown = false
-    var timer:NSTimer!
+    var timer:Timer!
     
     var device : AVCaptureDevice!           //代表了物理捕获设备如:摄像机。用于配置等底层硬件设置相机的自动对焦模式。
     var input  : AVCaptureDeviceInput!      //创建输入流
@@ -42,7 +42,7 @@ class ScanViewController: UIViewController {
 
     func setupCamera() -> Bool {
         // 获取设备
-        device = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo)
+        device = AVCaptureDevice.defaultDevice(withMediaType: AVMediaTypeVideo)
         do {
             input = try AVCaptureDeviceInput(device: device)
         }
@@ -53,7 +53,7 @@ class ScanViewController: UIViewController {
         
         output = AVCaptureMetadataOutput()
         // 设置代理 在主线程里刷新
-        output.setMetadataObjectsDelegate(self, queue: dispatch_get_main_queue())
+        output.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
         // rectOfInterest设置可扫描区域
         output.rectOfInterest = makeScanReaderInterestRect()
         //初始化链接对象
@@ -77,7 +77,7 @@ class ScanViewController: UIViewController {
         preView.frame = self.view.bounds
         
         let shadowView = makeScanCameraShadowView(makeScanReaderRect())
-        self.view.layer.insertSublayer(preView, atIndex: 0)
+        self.view.layer.insertSublayer(preView, at: 0)
         self.view.addSubview(shadowView)
         
         return true
@@ -85,7 +85,7 @@ class ScanViewController: UIViewController {
     
     func makeScanReaderRect() -> CGRect {
         let scanSize = (min(screenWidth, screenHeight) * 3) / 4
-        var scanRect = CGRectMake(0, 0, scanSize, scanSize)
+        var scanRect = CGRect(x: 0, y: 0, width: scanSize, height: scanSize)
         
         scanRect.origin.x += (screenWidth / 2) - (scanRect.size.width / 2)
         scanRect.origin.y += (screenHeight / 2) - (scanRect.size.height / 2) - 50 //整个扫描区域上下移动改变50即可
@@ -101,21 +101,21 @@ class ScanViewController: UIViewController {
         let width = rect.size.width / screenWidth
         let height = rect.size.height / screenHeight
         
-        return CGRectMake(y, x, height, width)
+        return CGRect(x: y, y: x, width: height, height: width)
     }
     
     // 背景阴影半透明黑色
-    func makeScanCameraShadowView(innerRect: CGRect) -> UIView {
+    func makeScanCameraShadowView(_ innerRect: CGRect) -> UIView {
         let referenceImage = UIImageView(frame: self.view.bounds)
         
         UIGraphicsBeginImageContext(referenceImage.frame.size)
         let context = UIGraphicsGetCurrentContext()
-        CGContextSetRGBFillColor(context, 0, 0, 0, 0.7)
-        var drawRect = CGRectMake(0, 0, screenWidth, screenHeight)
-        CGContextFillRect(context, drawRect)
-        drawRect = CGRectMake(innerRect.origin.x, innerRect.origin.y, innerRect.size.width, innerRect.size.height)
+        context?.setFillColor(red: 0, green: 0, blue: 0, alpha: 0.7)
+        var drawRect = CGRect(x: 0, y: 0, width: screenWidth, height: screenHeight)
+        context?.fill(drawRect)
+        drawRect = CGRect(x: innerRect.origin.x, y: innerRect.origin.y, width: innerRect.size.width, height: innerRect.size.height)
         print(drawRect)
-        CGContextClearRect(context, drawRect)
+        context?.clear(drawRect)
         
         let image = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
@@ -135,16 +135,16 @@ class ScanViewController: UIViewController {
         let downHeight = rect.size.height
         
         if upORdown == false {
-            traceNumber++
-            line.frame = CGRectMake(lineFrameX, lineFrameY + CGFloat(2 * traceNumber), downHeight, 2)
+            traceNumber += 1
+            line.frame = CGRect(x: lineFrameX, y: lineFrameY + CGFloat(2 * traceNumber), width: downHeight, height: 2)
             if CGFloat(2 * traceNumber) > downHeight - 2 {
                 upORdown = true
             }
         }
         else
         {
-            traceNumber--
-            line.frame = CGRectMake(lineFrameX, lineFrameY + CGFloat(2 * traceNumber), downHeight, 2)
+            traceNumber -= 1
+            line.frame = CGRect(x: lineFrameX, y: lineFrameY + CGFloat(2 * traceNumber), width: downHeight, height: 2)
             if traceNumber == 0 {
                 upORdown = false
             }
@@ -177,25 +177,25 @@ class ScanViewController: UIViewController {
         imageViewBR.image = UIImage(named: "scan_4")
         self.view.addSubview(imageViewBR)
         
-        line = UIImageView(frame: CGRectMake(rect.origin.x, rect.origin.y, rect.size.width, 2))
+        line = UIImageView(frame: CGRect(x: rect.origin.x, y: rect.origin.y, width: rect.size.width, height: 2))
         line.image = UIImage(named: "scan_net")
         self.view.addSubview(line)
         
-        label = UILabel(frame: CGRect(x: 0, y: imageY + height + 20, width: UIScreen.mainScreen().bounds.width, height: 20))
-        label.textAlignment = .Center
+        label = UILabel(frame: CGRect(x: 0, y: imageY + height + 20, width: UIScreen.main.bounds.width, height: 20))
+        label.textAlignment = .center
         label.text = "将二维码/条码放入框内,即可自动扫描"
-        label.textColor = UIColor.whiteColor()
+        label.textColor = UIColor.white
         self.view.addSubview(label)
     }
     
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         session.startRunning()
-        timer = NSTimer(timeInterval: 0.02, target: self, selector: "scanLineAnimation", userInfo: nil, repeats: true)
-        NSRunLoop.mainRunLoop().addTimer(timer, forMode: NSDefaultRunLoopMode)
+        timer = Timer(timeInterval: 0.02, target: self, selector: #selector(ScanViewController.scanLineAnimation), userInfo: nil, repeats: true)
+        RunLoop.main.add(timer, forMode: RunLoopMode.defaultRunLoopMode)
     }
     
-    override func viewWillDisappear(animated: Bool) {
+    override func viewWillDisappear(_ animated: Bool) {
         traceNumber = 0
         upORdown = false
         session.stopRunning()
@@ -205,11 +205,11 @@ class ScanViewController: UIViewController {
     }
     
     // MARK: show result
-    func showScanCode(code: String) {
+    func showScanCode(_ code: String) {
         //TODO: ===========   判断二维码码号   ===========
         session.stopRunning()
         label.text = code
-        delay(3) {
+        gg_delay(3) {
             self.session.startRunning()
         }
     }
@@ -220,29 +220,30 @@ class ScanViewController: UIViewController {
 
 extension ScanViewController: AVCaptureMetadataOutputObjectsDelegate {
     // MARK: AVCaptureMetadataOutputObjectsDelegate
-    func captureOutput(captureOutput: AVCaptureOutput!, didOutputMetadataObjects metadataObjects: [AnyObject]!, fromConnection connection: AVCaptureConnection!) {
+    func captureOutput(_ captureOutput: AVCaptureOutput!, didOutputMetadataObjects metadataObjects: [Any]!, from connection: AVCaptureConnection!) {
         AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)   // 震动
         if metadataObjects.count == 0 {
             return
         }
         let metadata = metadataObjects[0] as! AVMetadataMachineReadableCodeObject
         let value = metadata.stringValue
-        showScanCode(value)
+        showScanCode(value!)
     }
 }
 
-typealias Task = (cancel: Bool) -> ()
-func delay(time: NSTimeInterval, task:() -> ()) -> Task?{
-    func dispatch_later(block: () -> ()){
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(time * Double(NSEC_PER_SEC))), dispatch_get_main_queue(), block)
+typealias Task = (_ cancel: Bool) -> ()
+/// @discardableResult  返回值不使用时不显示警告
+@discardableResult func gg_delay(_ time: TimeInterval, task:@escaping () -> ()) -> Task? {
+    func dispatch_later(_ block: @escaping () -> ()){
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + Double(Int64(time * Double(NSEC_PER_SEC))) / Double(NSEC_PER_SEC), execute: block)
     }
-    var closure: dispatch_block_t? = task
+    var closure: (()->())? = task
     var result: Task?
     let delayClosure: Task = {
         cancel in
         if let internalClosure = closure {
             if cancel == false {
-                dispatch_async(dispatch_get_main_queue(), internalClosure)
+                DispatchQueue.main.async(execute: internalClosure)
             }
         }
         closure = nil
@@ -252,11 +253,11 @@ func delay(time: NSTimeInterval, task:() -> ()) -> Task?{
     
     dispatch_later { () -> () in
         if let delayClosure = result {
-            delayClosure(cancel: false)
+            delayClosure(false)
         }
     }
     return result
 }
-func cancel(task: Task?){
-    task?(cancel: true)
+func cancel(_ task: Task?) {
+    task?(true)
 }

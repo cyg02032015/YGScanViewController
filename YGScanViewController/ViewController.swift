@@ -20,7 +20,7 @@ class ViewController: UIViewController {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-    @IBAction func scanButtonClick(sender: AnyObject) {
+    @IBAction func scanButtonClick(_ sender: AnyObject) {
         let scanVC = ScanViewController()
         navigationController?.pushViewController(scanVC, animated: true)
     }
