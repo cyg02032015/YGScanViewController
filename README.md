@@ -16,7 +16,7 @@ In ScanViewController, In the function judgment your logic
         //TODO: ===========   判断二维码码号   ===========
         session.stopRunning()
         label.text = code
-        delay(3) {
+        GGDelay.gg_delay(3) {
             self.session.startRunning()
         }
     }
