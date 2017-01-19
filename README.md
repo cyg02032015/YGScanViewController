@@ -2,7 +2,7 @@
 ## Requrements
 
 * iOS 8.0+ 
-* Xcode 7.0 or later
+* Xcode 8.0 or later
 
 ### Use
 ``` swift
